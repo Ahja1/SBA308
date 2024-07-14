@@ -73,4 +73,46 @@ const StudentSubmissions = [
   }
 ];
 
+function getStudentData(course, ag, submissions) {
+  if (ag.course_id !== course.id) {
+    throw new Error("AssignmentGroup course_id does not match CourseInfo id");
+  }
+  const currentDate = new Date();
+  const studentsData = {};
+  submissions.forEach(submission => {
+    const assignment = ag.assignments.find(a => a.id === submission.assignment_id);
+    if (!assignment) {
+      throw new Error("Assignment not found");
+    }
+    const dueDate = new Date(assignment.due_at);
+    const submittedDate = new Date(submission.submission.submitted_at);
+    if (dueDate > currentDate) {
+      return;
+    }
+    if (!studentsData[submission.student_id]) {
+      studentsData[submission.student_id] = {
+        id: submission.student_id,
+        avg: 0,
+        totalPoints: 0,
+        totalWeightedScore: 0
+      };
+    }
+    const studentData = studentsData[submission.student_id];
+    let score = submission.submission.score;
+    if (submittedDate > dueDate) {
+      score -= assignment.points_possible * 0.1;
+    }
+    studentData[assignment.id] = (score / assignment.points_possible).toFixed(2);
+    studentData.totalPoints += assignment.points_possible;
+    studentData.totalWeightedScore += score;
+  });
+  return Object.values(studentsData).map(studentData => {
+    studentData.avg = (studentData.totalWeightedScore / studentData.totalPoints).toFixed(2);
+    delete studentData.totalPoints;
+    delete studentData.totalWeightedScore;
+    return studentData;
+  });
+}
 
+const result = getStudentData(CourseInfo, AssignmentGroup, StudentSubmissions);
+console.log(result);
