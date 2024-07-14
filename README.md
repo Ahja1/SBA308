@@ -1,2 +1,1 @@
-# SBA308
-# SBA308
+You will create a script that gathers data, processes it, and then outputs a consistent result as described by a specification.
